@@ -101,7 +101,7 @@ docker-compose -f ./docker/docker-compose.yml up -d
 ```bash
 docker-compose -f ./docker/docker-compose.yml ps
 docker-compose -f ./docker/docker-compose.yml logs -f --tail=80
-docker-compose -f ./docker/docker-compose.yml exec -u dsa stock-analyzer python main.py --help
+docker-compose -f ./docker/docker-compose.yml exec -u dsa analyzer python main.py --help
 ```
 
 #### 预期结果
@@ -125,7 +125,7 @@ sudo ufw allow 8000/tcp   # 若你在用 UFW
 **方式 A：容器内执行一次**
 
 ```bash
-docker-compose -f ./docker/docker-compose.yml exec -u dsa stock-analyzer python main.py --no-notify
+docker-compose -f ./docker/docker-compose.yml exec -u dsa analyzer python main.py --no-notify
 ```
 
 **方式 B：用 Web 界面**  
@@ -178,7 +178,7 @@ docker-compose -f ./docker/docker-compose.yml logs -f --tail=120
 #### 症状 3：端口访问失败
 
 ```bash
-docker-compose -f ./docker/docker-compose.yml exec stock-analyzer ss -lntp | grep 8000
+docker-compose -f ./docker/docker-compose.yml exec server ss -lntp | grep ${API_PORT:-8000}
 sudo ufw status
 ```
 常见是 8000 没放行或进程未监听。

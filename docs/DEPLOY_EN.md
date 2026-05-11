@@ -2,6 +2,10 @@
 
 This document explains how to deploy the AI Stock Analysis System to a server.
 
+## Beginner Recommended Route (Chinese-Only)
+
+If this is your first deployment and you can follow Chinese narration, start with the [step-by-step beginner deployment video script](deploy-beginner-video-script.md). It covers environment preparation, Docker Compose startup, Web verification, and common troubleshooting.
+
 ## Deployment Options Comparison
 
 | Option | Pros | Cons | Recommended For |
