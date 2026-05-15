@@ -29,9 +29,9 @@ For English contributors: please fill in English. All fields marked (EN) accept 
 - `Refs #<issue_number>` / umbrella issue / 多个子任务拆分场景（本 PR 属于分阶段推进时使用）。**umbrella issue 不要使用 Fixes，避免自动关闭总 issue** / For umbrella/split-plan issues, use `Refs` and avoid `Fixes` to prevent auto-closing parent issue.
 - 无 Issue 时说明原因与验收标准 / If no issue, explain the motivation and acceptance criteria
 
-> 统一约定：`Closes` 与 `Fixes` 在 GitHub 上语义一致，`#1309` 为 umbrella issue 的 PR 一律改为 `Refs #1309`，不得触发自动关闭该父 issue。
+> 统一约定：`Fixes` 在 GitHub 上为关闭语义，`#1309` 为 umbrella issue 的 PR 一律改为 `Refs #1309`，不得触发自动关闭该父 issue。
 
-> 拆分场景（如 #1309）请固定填写 `Refs #<issue_number>`，除非本 PR 直接闭环且无需后续子任务，否则不得使用 `Fixes / Closes` 触发自动关闭。
+> 拆分场景（如 #1309）请固定填写 `Refs #<issue_number>`，除非本 PR 直接闭环且无需后续子任务，否则不得使用 `Fixes` 触发自动关闭。
 
 示例 / Example:
 
