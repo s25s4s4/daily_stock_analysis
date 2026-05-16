@@ -88,6 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [修复] `/api/v1/analysis/status/{task_id}` 在 completed 内存队列路径补齐 `query_id` 与 `created_at`，避免分析结果被解析为空。
 - [新功能] 新增 `STOCK_LIST_FETCH_API`，支持从 HTTP(S) 获取远程股票列表，并在失败或为空时回退到 `STOCK_LIST`。
 - [修复] `STOCK_LIST_FETCH_API` 在重定向前校验目标地址，阻断 loopback、link-local 与云元数据地址，同时保留可访问的内网目标。
+- [修复] `STOCK_LIST_FETCH_API` 远程拉取不复用 `HTTP_PROXY` / `HTTPS_PROXY`，确保元数据与私有网关目标不会被代理路径绕过验证。
 
 ## [3.17.1] - 2026-05-16
 
@@ -125,48 +126,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - fix: Cool down unavailable optional fetchers, reduce noisy Longbridge/Pytdx retries, and downgrade buy advice when capital flow data is missing.
 - fix: Handle OpenAI-compatible `content_blocks`, normalize strategy price fields, and recover market review scrolling/history behavior.
 - docs/tests: Update notification, alert, desktop packaging, README/guide, and governance docs; add focused regression coverage for the new release paths.
-- [新功能] 通知网关新增 ntfy 一等渠道，支持通过 `NTFY_URL` / `NTFY_TOKEN` 推送并接入 Web 测试、路由、Actions 与诊断。
-- [新功能] 通知网关新增 Gotify 一等渠道，支持通过 `GOTIFY_URL` / `GOTIFY_TOKEN` 推送 Markdown 文本并接入 Web 测试、路由、Actions 与诊断。
-- [修复] 收紧 ntfy 结构化校验，避免 URL 编码空白 topic 被误判为有效通知端点。
-- [文档] 补充 Bark custom webhook 示例和 WebPush / Apprise 通知渠道评估，明确本轮不新增运行时依赖或配置入口。
-- [文档] 收口通知专题场景文档，并为 GitHub Actions 通知 env 对照表加入自动化校验。
-- [修复] 聚合报告通知按静态渠道隔离发送失败，并补充自定义 Webhook 部分成功诊断与脱敏测试。
-- [修复] 未配置 Tushare / Longbridge 凭据时不再实例化对应可选 fetcher，避免缺失凭据的数据源进入候选集。
-- [修复] Longbridge 遇到连接关闭类异常后会进入冷却期，并在美股/港股实时与日线请求中临时跳过该数据源，避免请求级频繁重连。
-- [修复] Pytdx 股票名称查询在全部服务器不可达时会短暂冷却，并在冷却期内跳过重复探测，减少无效拨号与告警噪音。
-- [修复] 调度模式未显式设置 `SCHEDULE_RUN_IMMEDIATELY` 时，会继续继承 `RUN_IMMEDIATELY` 的运行时覆盖语义，避免被持久化 `.env` 别名反向覆盖。
-- [文档] 补充 Longbridge 冷却开关与调度启动兼容语义说明。
-- [文档] 明确本轮仅新增市场复盘底层数据源能力（概念排行、人气股、涨停池），未修改模型名、provider、Base URL、LLM 运行时入口或 `.env` 兼容语义；回退路径为回滚本次变更版本，不需要执行配置迁移。
-- [新功能] Windows 桌面安装版接入 electron-updater，发现新版本后可后台下载并在用户确认后重启安装；Release 工作流同步上传自动更新所需元数据。
-- [测试] 完善桌面端更新链路验收说明：补充 `apps/dsa-desktop` 与打包产物元数据的本地验证步骤（Web 构建、桌面测试/构建、`latest.yml` 与 `*.blockmap` 检查），并明确 Windows/NSIS 部分需在 Windows 发布链路复核。
-- [测试] 补充 `docs/desktop-package.md` 对 Windows NSIS 与 `desktop-release` 链路的发布级复核要求：注明 Linux 环境不能直接产出 Windows 安装器，要求在 Windows 环境补齐 `latest.yml`/`*.blockmap` 与 installer 的版本一致性与附件核对。
-- [文档] 强化桌面打包文档：补充 `latest.yml` / `*.blockmap` 与 `desktop-release` tag/version 一致性核验清单，明确非 Windows 环境下需在平台限制里补充说明。
-- [修复] 为 Windows NSIS 安装版自动更新加入安装目录运行时文件（`.env`、`data/stock_analysis.db`、`data/stock_analysis.db-wal`、`data/stock_analysis.db-shm`、`logs/desktop.log`）备份与首次启动恢复链路，并在 `quitAndInstall` 前等待后端退出，降低升级时配置与数据库丢失风险。
-- [修复] Windows NSIS 自动更新在运行时文件部分恢复失败时只保留失败项待重试，避免已恢复成功的配置或数据库文件在后续启动时被旧备份重复覆盖。
-- [修复] Windows NSIS 自动更新在安装尝试未切换桌面端版本时跳过自动恢复，避免失败或取消安装后误回滚用户运行时数据。
-- [修复] 同版本启动时清理未生效的自动更新备份目录，避免后续升级误将旧 `.dsa-desktop-update-backup/runtime-state.json` 的运行时文件再次恢复到新版本。
-- [修复] 清理提交中的临时探测文件（`node_modules_exists.txt` 与 `node_modules_ls_check.txt`），避免污染桌面/前端改动范围。
-- [新功能] Web 系统设置页开放 `.env` 配置备份导入/导出，复用键级覆盖、配置版本冲突保护和重载链路；Web 端在 `ADMIN_AUTH_ENABLED=false` 时该入口为禁用状态。
-- [chore] 精简仓库根目录：将文档图片资源迁入 `docs/assets/`，将东方财富请求补丁迁入 `src/patches/`，并下移 CI 专用依赖文件与技能适配服务。
-- [文档] 更新多语言 README 首页浅色工作台 GIF，并精简功能特性表，保留原有赞助商、快速开始和推送效果结构。
-- [新功能] 通知网关新增默认关闭的进程内降噪配置，支持去重、冷却、静默时段和最低严重级别，并将每日摘要开关标记为预留能力。
-- [文档] 恢复多语言 README 新闻源配置表中推荐项的加粗样式，统一相关项目章节层级，并精简顶部导航、联系文案和尾部展示。
-- [修复] Docker 挂载的 `logs` 目录不可写时启动日志自动降级到控制台输出，并补充非 root 容器目录权限说明。
-- [修复] 修正分析报告 API 构建策略点位时数值字段未归一为字符串的问题，避免策略价格触发响应 DTO 类型校验失败。
-- [修复] Docker 启动入口自动修复 `data` / `logs` / `reports` 挂载目录权限并降权运行，文档化的 Compose `exec` 手动命令显式使用 `dsa` 用户，避免普通部署需要手动 `chown` / `chmod`。
-- [修复] Web 首页大盘复盘结果改由主内容滚动区承载，避免 loading 切换到长结果后下方报告区域被截断或无法继续滚动。
-- [文档] 新增告警中心专题文档（docs/alerts.md），说明 EventMonitor 基线、legacy 规则契约和 Phase 边界。
-- [修复] Web 设置页为通知测试与 Agent/通知配置区域增加局部运行时错误兜底，异常时提示提供 Windows 桌面端 `desktop.log`，避免整页黑屏。
-- [修复] 资金流数据不可用时将直接买入结论降级为观察，避免缺失数据被误读为高置信买入依据。
-- [修复] 调高基本面聚合默认超时预算，降低 Windows/Docker 环境下整段基本面 timeout 的概率。
-- [修复] 正式分析链路兼容 OpenAI-compatible `content_blocks` 响应，避免 `message.content=null` 时被误判为空回复。
-- [文档] Issue #1279 外部响应兼容补证据：本次修复以 `litellm>=1.80.10,!=1.82.7,!=1.82.8,<2.0.0` 为运行时前提，交叉参照 [LiteLLM OpenAI-compatible](https://docs.litellm.ai/docs/providers/openai_compatible) / [OpenAI Chat Completion API](https://platform.openai.com/docs/api-reference/chat)、并以 `tests/test_market_analyzer_generate_text.py` 的 `content_blocks` 与 `list content` 回归样例为复现依据，保留 `message.content` 回退逻辑避免兼容断层。
-- [文档] Issue #1306 明确本轮仅持久化大盘复盘历史，不改 LLM 模型名、provider、Base URL、LiteLLM 运行时清理逻辑；兼容性依据为本仓库 `requirements.txt` 锁定版本与现有 `docs/LLM_CONFIG_GUIDE*.md` 兼容说明，回退路径为回滚本版本，见 `tests/test_analysis_api_contract.py`、`tests/test_analysis_history.py`、`tests/test_market_review.py`。
-- [改进] 大盘复盘新增 `MARKET_REVIEW_COLOR_SCHEME` 配置，可在指数涨跌幅中选择绿涨红跌或红涨绿跌。
-- [文档] 明确 `MARKET_REVIEW_COLOR_SCHEME` 仅为大盘复盘展示配置，枚举为 `green_up`/`red_up`（默认 `green_up`），属于文案与颜色语义层面变更；本次未调整模型名、provider、Base URL、LLM 运行时迁移或运行时清理逻辑。
-- [新功能] 新增 Alert API MVP，支持告警规则 CRUD、启停、一次性测试以及触发/通知结果查询接口，首版覆盖 `price_cross` / `price_change_percent` / `volume_spike`，并保持 legacy 配置兼容和响应脱敏。
-- [修复] 大盘复盘执行结果写入现有分析历史，Web 历史列表可直接查看已生成复盘，避免重复触发分析。
-
 ## [3.16.0] - 2026-05-10
 
 ### 发布亮点

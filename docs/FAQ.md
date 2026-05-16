@@ -89,7 +89,7 @@
    - `GEMINI_MODEL`
    - `REPORT_TYPE`
 
-如果不想频繁修改 `STOCK_LIST`，可以把 `STOCK_LIST_FETCH_API` 设置为一个 HTTP(S) 地址，由外部服务返回纯文本或 JSON 股票列表。远程拉取失败或返回空列表时，Actions 会继续使用 `STOCK_LIST`。出于安全考虑，该地址会阻断 loopback、link-local 和云 metadata 目标；自托管环境可使用运行环境可访问的内网地址。
+如果不想频繁修改 `STOCK_LIST`，可以把 `STOCK_LIST_FETCH_API` 设置为一个 HTTP(S) 地址，由外部服务返回纯文本或 JSON 股票列表。远程拉取失败或返回空列表时，Actions 会继续使用 `STOCK_LIST`。出于安全考虑，该请求不复用 `HTTP_PROXY`/`HTTPS_PROXY`，并会阻断 loopback、link-local 和云 metadata 目标；自托管环境可使用运行环境可访问的内网地址。
 
 ---
 

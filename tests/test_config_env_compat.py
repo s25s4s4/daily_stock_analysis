@@ -553,7 +553,7 @@ class ConfigEnvCompatibilityTestCase(unittest.TestCase):
     @patch("src.config.setup_env")
     @patch("src.config.urllib.request.build_opener")
     @patch.object(Config, "_parse_litellm_yaml", return_value=[])
-    def test_stock_list_fetch_api_ignores_environment_proxy_settings(
+    def test_stock_list_fetch_api_disables_environment_proxy_for_metadata_validation(
         self,
         _mock_parse_yaml,
         mock_build_opener,

@@ -415,7 +415,7 @@ git push -u origin main
 | `SERVERCHAN3_SENDKEY` | Server酱³ Sendkey | 可选* |
 | `CUSTOM_WEBHOOK_URLS` | 自定义 Webhook（多个逗号分隔） | 可选* |
 | `STOCK_LIST` | 自选股列表，如 `600519,300750`；远程拉取失败时作为兜底 | ✅ |
-| `STOCK_LIST_FETCH_API` | HTTP(S) 远程自选股列表地址，支持纯文本和 JSON；适合 Actions 中用 Variables 维护动态股票池；阻断 loopback、link-local 和云 metadata 地址 | 可选 |
+| `STOCK_LIST_FETCH_API` | HTTP(S) 远程自选股列表地址，支持纯文本和 JSON；适合 Actions 中用 Variables 维护动态股票池；该请求不复用 `HTTP_PROXY`/`HTTPS_PROXY`，并会阻断 loopback、link-local 与云 metadata 地址 | 可选 |
 | `SERPAPI_API_KEYS` | SerpAPI Key | 推荐 |
 | `TAVILY_API_KEYS` | Tavily 搜索 API Key | 可选 |
 | `BOCHA_API_KEYS` | 博查搜索 API Key | 可选 |

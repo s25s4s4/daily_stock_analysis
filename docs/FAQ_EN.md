@@ -87,7 +87,7 @@ This document compiles common issues encountered by users and their solutions.
    - `GEMINI_MODEL`
    - `REPORT_TYPE`
 
-If you do not want to edit `STOCK_LIST` frequently, set `STOCK_LIST_FETCH_API` to an HTTP(S) endpoint that returns a plain-text or JSON watchlist. When remote fetching fails or returns no valid codes, Actions continues with `STOCK_LIST`. For safety, loopback, link-local, and cloud metadata targets are blocked; self-hosted deployments may use private URLs reachable by the runtime.
+If you do not want to edit `STOCK_LIST` frequently, set `STOCK_LIST_FETCH_API` to an HTTP(S) endpoint that returns a plain-text or JSON watchlist. When remote fetching fails or returns no valid codes, Actions continues with `STOCK_LIST`. For safety, the request does not reuse `HTTP_PROXY`/`HTTPS_PROXY`, and loopback, link-local, and cloud metadata targets are blocked; self-hosted deployments may use private URLs reachable by the runtime.
 
 ---
 

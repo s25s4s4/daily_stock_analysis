@@ -145,7 +145,7 @@ daily_stock_analysis/
 | Secret 名称 | 说明 | 必填 |
 |------------|------|:----:|
 | `STOCK_LIST` | 自选股代码，如 `600519,300750,002594`；当 `STOCK_LIST_FETCH_API` 不可用或返回空列表时作为兜底 | ✅ |
-| `STOCK_LIST_FETCH_API` | 可选 HTTP(S) 地址，用于动态拉取自选股列表；支持纯文本、JSON 数组或 `{"stocks":[...]}` / `{"stock_list":[...]}` / `{"codes":[...]}`；会阻断 loopback、link-local 和云 metadata 地址 | 可选 |
+| `STOCK_LIST_FETCH_API` | 可选 HTTP(S) 地址，用于动态拉取自选股列表；支持纯文本、JSON 数组或 `{"stocks":[...]}` / `{"stock_list":[...]}` / `{"codes":[...]}`；该请求不复用 `HTTP_PROXY`/`HTTPS_PROXY`，并会阻断 loopback、link-local 和云 metadata 地址 | 可选 |
 | `ANSPIRE_API_KEYS` | [Anspire AI Search](https://aisearch.anspire.cn/) 针对中文内容特别优化；同一 Key 可用于搜索与 Anspire 大模型网关的兜底示例（是否可用以控制台与账号权限为准） | 推荐 |
 | `SERPAPI_API_KEYS` | [SerpAPI](https://serpapi.com/baidu-search-api?utm_source=github_daily_stock_analysis) 搜索引擎结果补强，适合实时金融新闻 | 推荐 |
 | `TAVILY_API_KEYS` | [Tavily](https://tavily.com/) 搜索 API（新闻搜索） | 可选 |
@@ -394,7 +394,7 @@ daily_stock_analysis/
 | 变量名 | 说明 | 默认值 |
 |--------|------|--------|
 | `STOCK_LIST` | 自选股代码（逗号分隔）；远程列表不可用时作为兜底 | - |
-| `STOCK_LIST_FETCH_API` | 可选 HTTP(S) 地址，用于动态拉取自选股列表；支持纯文本、JSON 数组或包含 `stocks` / `stock_list` / `codes` 的 JSON 对象；自托管环境可使用运行环境可访问的内网地址，但会阻断 loopback、link-local 和云 metadata 地址 | - |
+| `STOCK_LIST_FETCH_API` | 可选 HTTP(S) 地址，用于动态拉取自选股列表；支持纯文本、JSON 数组或包含 `stocks` / `stock_list` / `codes` 的 JSON 对象；请求不复用 `HTTP_PROXY`/`HTTPS_PROXY`，并会阻断 loopback、link-local 和云 metadata 地址；自托管环境可使用运行环境可访问的内网地址 | - |
 | `ADMIN_AUTH_ENABLED` | Web 登录：设为 `true` 启用密码保护；首次访问在网页设置初始密码，可在「系统设置 > 修改密码」修改；忘记密码执行 `python -m src.auth reset_password`。Web 的 `.env` 备份导入导出仅在开启该开关后可用（桌面端不受此限制）。 | `false` |
 | `TRUST_X_FORWARDED_FOR` | 单层可信反向代理部署时设为 `true`，取 `X-Forwarded-For` 最右值作为真实客户端 IP（用于登录限流等）；直连公网时保持 `false` 防伪造。多级代理/CDN 场景下限流 key 可能退化为边缘代理 IP，需额外评估 | `false` |
 | `MAX_WORKERS` | 并发线程数 | `3` |

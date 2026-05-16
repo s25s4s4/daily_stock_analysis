@@ -373,7 +373,7 @@ Add these Secrets:
 | `SERVERCHAN3_SENDKEY` | ServerChan v3 Sendkey | Optional* |
 | `CUSTOM_WEBHOOK_URLS` | Custom Webhook (comma-separated for multiple) | Optional* |
 | `STOCK_LIST` | Watchlist, e.g., `600519,300750`; fallback when remote fetching fails | ✅ |
-| `STOCK_LIST_FETCH_API` | HTTP(S) remote watchlist endpoint, plain text or JSON; useful for dynamic watchlists in Actions Variables; loopback, link-local, and cloud metadata addresses are blocked | Optional |
+| `STOCK_LIST_FETCH_API` | HTTP(S) remote watchlist endpoint, plain text or JSON; useful for dynamic watchlists in Actions Variables; request does not reuse `HTTP_PROXY`/`HTTPS_PROXY`, and loopback, link-local, and cloud metadata addresses are blocked | Optional |
 | `SERPAPI_API_KEYS` | SerpAPI Key | Recommended |
 | `TAVILY_API_KEYS` | Tavily Search API Key | Optional |
 | `BOCHA_API_KEYS` | Bocha Search API Key | Optional |
