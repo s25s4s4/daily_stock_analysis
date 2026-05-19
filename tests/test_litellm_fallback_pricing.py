@@ -90,6 +90,32 @@ class LiteLLMFallbackPricingTestCase(unittest.TestCase):
             [{"MiniMax-M2.7": llm_adapter._CUSTOM_MODEL_PRICING["MiniMax-M2.7"]}],
         )
 
+    def test_register_fallback_pricing_falls_back_to_zero_cost_when_custom_pricing_registration_fails(self) -> None:
+        registered: list[dict] = []
+        attempts = 0
+
+        def _register(payload):
+            nonlocal attempts
+            attempts += 1
+            registered.append(payload)
+            if attempts == 1:
+                raise RuntimeError("register failed")
+
+        with patch.object(llm_adapter.litellm, "register_model", side_effect=_register, create=True):
+            with patch.object(llm_adapter.litellm, "model_cost", {}, create=True):
+                llm_adapter._FALLBACK_MODEL_PRICING_REGISTERED.clear()
+                llm_adapter.register_fallback_model_pricing(["openai/MiniMax-M2.7"])
+
+        self.assertEqual(len(registered), 2)
+        self.assertEqual(
+            registered[0],
+            {"MiniMax-M2.7": llm_adapter._CUSTOM_MODEL_PRICING["MiniMax-M2.7"]},
+        )
+        self.assertEqual(
+            registered[1],
+            {"MiniMax-M2.7": llm_adapter._FALLBACK_MODEL_PRICING},
+        )
+
     def test_llm_tool_adapter_registers_fallback_pricing_before_direct_completion(self) -> None:
         adapter = llm_adapter.LLMToolAdapter.__new__(llm_adapter.LLMToolAdapter)
         adapter._config = _fake_agent_config()

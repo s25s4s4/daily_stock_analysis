@@ -647,8 +647,13 @@ def register_fallback_model_pricing(models: Iterable[str]) -> None:
                 register({wire_model: dict(custom_pricing)})
                 logger.debug("Registered custom pricing for %s", wire_model)
             except Exception as exc:
-                logger.debug("Custom pricing registration skipped for %s: %s", wire_model, exc)
-            continue
+                logger.debug(
+                    "Custom pricing registration failed for %s, will try fallback pricing: %s",
+                    wire_model,
+                    exc,
+                )
+            else:
+                continue
         if wire_model in cost_map or wire_model in _FALLBACK_MODEL_PRICING_REGISTERED:
             continue
         try:
