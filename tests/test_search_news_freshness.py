@@ -412,6 +412,54 @@ class SearchNewsFreshnessTestCase(unittest.TestCase):
         self.assertEqual(resp.results[0].relevance_category, "direct_company_news")
         self.assertEqual(resp.results[1].relevance_category, "sector_related_news")
 
+    def test_ambiguous_english_name_generic_event_does_not_stop_provider_fallback(self) -> None:
+        """Ambiguous title-only names plus broad event words should not count as direct hits."""
+        fresh = datetime.now().date().isoformat()
+        service = SearchService(
+            bocha_keys=["dummy_key"],
+            searxng_public_instances_enabled=False,
+            news_max_age_days=3,
+            news_strategy_profile="short",
+        )
+        p1 = SimpleNamespace(
+            is_available=True,
+            name="AmbiguousProvider",
+            search=MagicMock(
+                return_value=_response(
+                    [
+                        _result(
+                            "Apple stock results improve after harvest update",
+                            fresh,
+                            snippet="Fruit market coverage tracks inventory and crop supply.",
+                        )
+                    ]
+                )
+            ),
+        )
+        p2 = SimpleNamespace(
+            is_available=True,
+            name="TickerProvider",
+            search=MagicMock(
+                return_value=_response(
+                    [
+                        _result(
+                            "AAPL Apple earnings beat analyst expectations",
+                            fresh,
+                            snippet="Apple revenue guidance improved after quarterly earnings.",
+                        )
+                    ]
+                )
+            ),
+        )
+        service._providers = [p1, p2]
+
+        resp = service.search_stock_news("AAPL", "Apple", max_results=1)
+
+        self.assertEqual(resp.results[0].title, "AAPL Apple earnings beat analyst expectations")
+        self.assertEqual(resp.results[0].relevance_category, "direct_company_news")
+        p1.search.assert_called_once()
+        p2.search.assert_called_once()
+
     def test_relevance_metadata_is_visible_in_news_context(self) -> None:
         result = SearchResult(
             title="贵州茅台 600519 发布公告",

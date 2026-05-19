@@ -2136,6 +2136,10 @@ class SearchService:
         _MACRO_NEWS_CATEGORY: 2,
     }
     _AMBIGUOUS_EN_COMPANY_NAMES = {"apple", "meta", "square", "target", "gap"}
+    _AMBIGUOUS_EN_CONFIRMING_EVENT_TERMS = (
+        "earnings", "revenue", "profit", "guidance", "filing", "buyback",
+        "dividend", "lawsuit", "merger", "acquisition",
+    )
     _COMPANY_EVENT_TERMS = (
         "公告", "披露", "发布", "收购", "回购", "减持", "增持", "诉讼", "处罚",
         "业绩", "财报", "营收", "净利润", "分红", "董事会", "股东大会", "订单",
@@ -2615,6 +2619,9 @@ class SearchService:
         score = 0
         direct_signal = 0
         reasons: List[str] = []
+        has_stock_code_signal = False
+        has_unambiguous_company_signal = False
+        has_ambiguous_company_signal = False
 
         def add_reason(reason: str) -> None:
             if reason not in reasons and len(reasons) < 5:
@@ -2624,6 +2631,7 @@ class SearchService:
             if cls._contains_identity_term(title, term):
                 score += 55
                 direct_signal += 55
+                has_stock_code_signal = True
                 add_reason(f"标题命中股票代码 {term}")
                 break
         else:
@@ -2631,6 +2639,7 @@ class SearchService:
                 if cls._contains_identity_term(snippet, term):
                     score += 34
                     direct_signal += 34
+                    has_stock_code_signal = True
                     add_reason(f"摘要命中股票代码 {term}")
                     break
             else:
@@ -2638,6 +2647,7 @@ class SearchService:
                     if cls._contains_identity_term(url, term):
                         score += 18
                         direct_signal += 18
+                        has_stock_code_signal = True
                         add_reason(f"链接命中股票代码 {term}")
                         break
 
@@ -2651,18 +2661,36 @@ class SearchService:
             if cls._contains_identity_term(title, term):
                 score += title_score
                 direct_signal += title_score
+                if ambiguous_en:
+                    has_ambiguous_company_signal = True
+                else:
+                    has_unambiguous_company_signal = True
                 add_reason(f"标题命中公司名 {term}")
                 break
             if cls._contains_identity_term(snippet, term):
                 score += snippet_score
                 direct_signal += snippet_score
+                if ambiguous_en:
+                    has_ambiguous_company_signal = True
+                else:
+                    has_unambiguous_company_signal = True
                 add_reason(f"摘要命中公司名 {term}")
                 break
 
         has_company_event = cls._contains_any_news_term(full_text, cls._COMPANY_EVENT_TERMS)
         if has_company_event and direct_signal > 0:
             score += 12
-            direct_signal += 12
+            ambiguous_name_only = (
+                has_ambiguous_company_signal
+                and not has_stock_code_signal
+                and not has_unambiguous_company_signal
+            )
+            has_confirming_event = cls._contains_any_news_term(
+                full_text,
+                cls._AMBIGUOUS_EN_CONFIRMING_EVENT_TERMS,
+            )
+            if not ambiguous_name_only or has_confirming_event:
+                direct_signal += 12
             add_reason("命中公告/财报/交易等公司事件词")
 
         if cls._contains_any_news_term(f"{source} {url}", cls._OFFICIAL_SOURCE_TERMS):
