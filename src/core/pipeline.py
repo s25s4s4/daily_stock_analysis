@@ -871,7 +871,7 @@ class StockAnalysisPipeline:
                         missing,
                     )
             # chip_structure fallback (Issue #589), before save_analysis_history
-            if result:
+            if result and chip_data is not None:
                 normalize_chip_structure_availability(result, chip_data)
 
             # price_position fallback (same as non-agent path Step 7.7)

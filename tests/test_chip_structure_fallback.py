@@ -299,3 +299,24 @@ class TestFillChipStructureIfNeeded(unittest.TestCase):
         dp = result.dashboard["data_perspective"]
         self.assertEqual(dp["chip_structure"], {})
         self.assertEqual(dp["chip_unavailable_reason"], "筹码分布未启用或数据源暂不可用，未纳入筹码判断。")
+
+    def test_normalize_accepts_zero_concentration_when_avg_cost_present(self) -> None:
+        result = self._make_result(
+            dashboard={"data_perspective": {"chip_structure": {"profit_ratio": 0, "avg_cost": 0, "concentration": 0}}}
+        )
+        zero_concentration_chip = ChipDistribution(
+            code="600519",
+            profit_ratio=0.52,
+            avg_cost=1850.0,
+            concentration_90=0.0,
+            concentration_70=0.0,
+        )
+
+        normalize_chip_structure_availability(result, zero_concentration_chip)
+
+        dp = result.dashboard["data_perspective"]
+        cs = dp["chip_structure"]
+        self.assertEqual(cs["profit_ratio"], "52.0%")
+        self.assertEqual(cs["avg_cost"], 1850.0)
+        self.assertEqual(cs["concentration"], "0.00%")
+        self.assertNotIn("chip_unavailable_reason", dp)

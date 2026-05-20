@@ -347,6 +347,20 @@ def _safe_float(v: Any, default: float = 0.0) -> float:
         return default
 
 
+def _coerce_chip_metric(v: Any) -> Optional[float]:
+    """Convert chip metrics while preserving the distinction between missing and zero."""
+    if v is None:
+        return None
+    try:
+        numeric = float(v)
+    except (TypeError, ValueError):
+        try:
+            numeric = float(str(v).strip())
+        except (TypeError, ValueError):
+            return None
+    return None if math.isnan(numeric) else numeric
+
+
 _BULLISH_TREND_HINTS: Tuple[str, ...] = (
     "多头排列",
     "持续上涨",
@@ -608,15 +622,25 @@ def _has_meaningful_chip_data(chip_data: Any) -> bool:
     if not chip_data:
         return False
     if hasattr(chip_data, "avg_cost"):
-        avg_cost = _safe_float(getattr(chip_data, "avg_cost", None))
-        concentration_90 = _safe_float(getattr(chip_data, "concentration_90", None))
-        concentration_70 = _safe_float(getattr(chip_data, "concentration_70", None))
+        avg_cost = _coerce_chip_metric(getattr(chip_data, "avg_cost", None))
+        concentration_90 = _coerce_chip_metric(getattr(chip_data, "concentration_90", None))
+        concentration_70 = _coerce_chip_metric(getattr(chip_data, "concentration_70", None))
     else:
         d = chip_data if isinstance(chip_data, dict) else {}
-        avg_cost = _safe_float(d.get("avg_cost"))
-        concentration_90 = _safe_float(d.get("concentration_90") or d.get("concentration"))
-        concentration_70 = _safe_float(d.get("concentration_70"))
-    return avg_cost > 0 and (concentration_90 > 0 or concentration_70 > 0)
+        avg_cost = _coerce_chip_metric(d.get("avg_cost"))
+        concentration_90_value = d.get("concentration_90")
+        if concentration_90_value is None:
+            concentration_90_value = d.get("concentration")
+        concentration_90 = _coerce_chip_metric(concentration_90_value)
+        concentration_70 = _coerce_chip_metric(d.get("concentration_70"))
+    return (
+        avg_cost is not None
+        and avg_cost > 0
+        and (
+            (concentration_90 is not None and concentration_90 >= 0)
+            or (concentration_70 is not None and concentration_70 >= 0)
+        )
+    )
 
 
 def _mark_chip_structure_unavailable(result: "AnalysisResult", language: str) -> None:
