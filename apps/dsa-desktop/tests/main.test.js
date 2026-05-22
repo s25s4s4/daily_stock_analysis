@@ -278,6 +278,7 @@ test('auto download prompt falls back to error when install path fails', async (
   const envFile = path.join(exeDir, '.env');
   const backupRoot = path.join(userDataDir, '.dsa-desktop-update-backup');
   const originalRemove = fs.rmSync;
+  let quitAndInstallArgs = null;
   const fakeUpdater = {
     autoDownload: true,
     autoInstallOnAppQuit: false,
@@ -293,7 +294,8 @@ test('auto download prompt falls back to error when install path fails', async (
         });
       }
     },
-    quitAndInstall: () => {
+    quitAndInstall: (...args) => {
+      quitAndInstallArgs = args;
       throw new Error('安装进程启动失败');
     },
   };
@@ -339,6 +341,7 @@ test('auto download prompt falls back to error when install path fails', async (
   assert.equal(state.status, mainModule.UPDATE_STATUS.ERROR);
   assert.match(state.message, /更新安装失败/);
   assert.equal(state.updateMode, mainModule.UPDATE_MODE.AUTO);
+  assert.deepEqual(quitAndInstallArgs, [true, true]);
   assert.equal(fs.existsSync(backupRoot), false);
   assert.equal(fs.existsSync(path.join(backupRoot, 'runtime-state.json')), false);
 
@@ -720,4 +723,5 @@ test('stopBackend waits for backend process exit', async (t) => {
   ]);
 
   assert.equal(killSignals.includes('SIGTERM'), true);
+  assert.equal(mainModule.__getBackendProcessForTest(), null);
 });
