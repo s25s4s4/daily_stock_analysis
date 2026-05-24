@@ -139,6 +139,67 @@ class TestAgentConfig(unittest.TestCase):
 
         Config._instance = None
 
+    def test_build_agent_executor_does_not_mutate_llm_route_config(self) -> None:
+        """Agent factory should not rewrite model/base_url/runtime routing fields."""
+        provided_config = SimpleNamespace(
+            agent_arch="single",
+            agent_skills=["bull_trend"],
+            agent_max_steps="10",
+            agent_orchestrator_timeout_s="120",
+            litellm_model="openai/gpt-5",
+            agent_litellm_model="",
+            openai_base_url="https://api.openai.com/v1",
+        )
+        captured: Dict[str, Any] = {}
+
+        def _mock_llm_adapter(cfg):
+            captured["cfg"] = cfg
+            return MagicMock()
+
+        fake_llm_module = types.ModuleType("src.agent.llm_adapter")
+        fake_llm_module.LLMToolAdapter = _mock_llm_adapter
+
+        fake_executor_module = types.ModuleType("src.agent.executor")
+        fake_executor_cls = MagicMock(return_value=MagicMock())
+        fake_executor_module.AgentExecutor = fake_executor_cls
+
+        skill_manager = MagicMock()
+        skill_manager.list_skills.return_value = [
+            SimpleNamespace(
+                name="bull_trend",
+                display_name="bull_trend",
+                description="bull_trend desc",
+                instructions="测试指令",
+                default_active=True,
+                default_router=True,
+                default_priority=100,
+                user_invocable=True,
+                source="builtin",
+            )
+        ]
+        skill_manager.get_skill_instructions.return_value = "测试指令"
+
+        with patch.dict(sys.modules, {
+            "litellm": MagicMock(),
+            "src.agent.llm_adapter": fake_llm_module,
+            "src.agent.executor": fake_executor_module,
+        }):
+            factory_module = importlib.import_module("src.agent.factory")
+            with patch.object(factory_module, "get_skill_manager", return_value=skill_manager), \
+                 patch.object(factory_module, "get_tool_registry", return_value=MagicMock()):
+                factory_module.build_agent_executor(provided_config)
+
+        adapter_cfg = captured.get("cfg")
+        self.assertIs(adapter_cfg, provided_config)
+        self.assertEqual(provided_config.agent_max_steps, "10")
+        self.assertEqual(provided_config.agent_orchestrator_timeout_s, "120")
+        self.assertEqual(provided_config.litellm_model, "openai/gpt-5")
+        self.assertEqual(provided_config.openai_base_url, "https://api.openai.com/v1")
+        fake_executor_cls.assert_called_once()
+        kwargs = fake_executor_cls.call_args.kwargs
+        self.assertEqual(kwargs["max_steps"], 10)
+        self.assertEqual(kwargs["timeout_seconds"], 120)
+
 
 class TestAgentFactorySkillBaseline(unittest.TestCase):
     """Ensure explicit skill selection does not silently re-apply the default bull-trend baseline."""
