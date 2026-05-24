@@ -1,8 +1,8 @@
 # Extension Runtime 与插件化契约
 
-本文定义 DSA Extension Runtime 的 P0/P1 契约，用于后续按 #1309 渐进实现内置插件、Action、Agent Tool、API、Web、CLI、Scheduler、Bot 和未来 MCP 入口。
+本文定义 DSA Extension Runtime 的阶段性契约，用于按 #1309 渐进实现内置插件、Action、Agent Tool、API、Web、CLI、Scheduler、Bot 和未来 MCP 入口。
 
-当前状态：**P1 Runtime MVP 已落地**。本阶段新增内置 Action 注册执行、JSON Schema 输入校验、权限/确认/超时/调用深度守卫、进程内并发去重、内置 DSA Action 和任务队列扩展元数据；AlphaSift 仅加载内置 manifest，真实选股 adapter、API/Web 页面、CLI/Bot/Scheduler/MCP 入口和持久化 Evidence Store 继续后置。
+当前状态：**P2 AlphaSift Action MVP 已落地**。P1 新增内置 Action 注册执行、JSON Schema 输入校验、权限/确认/超时/调用深度守卫、进程内并发去重、内置 DSA Action 和任务队列扩展元数据；P2 在此基础上接入内置 AlphaSift manifest、Action、schema 与 Python/HTTP/CLI adapter。Plugin API、Web 机会发现页、CLI/Bot/Scheduler/MCP 入口和持久化 Evidence Store 继续后置。
 
 ## 1. 目标与边界
 
@@ -16,8 +16,8 @@
 非目标：
 
 - P0/P1 不开放第三方插件目录，不加载远程代码。
-- P1 不做动态 Web 插件渲染。
-- P1 不执行 AlphaSift 选股，不新增 Plugin API、Web 机会发现页、CLI/Bot/Scheduler/MCP 入口或持久化 run store。
+- P1/P2 不做动态 Web 插件渲染。
+- P2 不新增 Plugin API、Web 机会发现页、CLI/Bot/Scheduler/MCP 入口或持久化 run store。
 - AlphaSift 不进入 `data_provider/`，它不是行情源，而是候选发现插件。
 - Skill 只描述自然语言使用说明和 allowed tools/actions，不直接执行代码。
 
@@ -352,8 +352,15 @@ P6 前不引入 Alembic。
 - `EXTENSIONS_ENABLED=true`
 - `EXTENSIONS_AUTOLOAD_BUILTIN=true`
 - `EXTENSIONS_ALPHASIFT_ENABLED=false`
+- `ALPHASIFT_API_URL=`
+- `ALPHASIFT_CLI_PATH=alphasift`
+- `EXTENSIONS_ALPHASIFT_CLI_FALLBACK_ENABLED=false`
+- `ALPHASIFT_SNAPSHOT_SOURCE_PRIORITY=em_datacenter,efinance,akshare_em`
+- `EXTENSIONS_ALPHASIFT_TIMEOUT_SECONDS=180`
+- `EXTENSIONS_CLI_STDOUT_MAX_BYTES=10485760`
+- `EXTENSIONS_CLI_STDERR_MAX_BYTES=1048576`
 - `MAX_ACTION_CALL_DEPTH=3`
-- AlphaSift API / CLI / Scheduler 配置不属于 P1；后续接入 executable AlphaSift adapter 时再补。
+- AlphaSift Scheduler 配置不属于 P2；后续接入多入口批次时再补。
 
 安全规则：
 
@@ -487,18 +494,11 @@ P2 实施前必须核实：
 
 ## 20. Phase 边界
 
-推荐本地实现顺序：
+实际提交收敛为四个评审批次，避免把 API/Web/持久化一次性混入运行时基础层：
 
 | Phase | 范围 |
 | --- | --- |
-| PR-A0 | 兼容升级 `ToolDefinition.input_schema` |
-| P0 | 本文档契约，不写 runtime |
-| P1 | Extension Runtime MVP；包含内部 DSA core action 复用层，不向插件市场展示 |
-| P1.5 | Action Run Envelope MVP；最小 run 表和 task_queue extension dedupe |
-| P2 | AlphaSift Plugin / Action MVP |
-| P3 | AlphaSift Skill 与 Skill Router |
-| P4 | Plugin API 与任务流 |
-| P5 | Web 插件中心与机会发现页面 |
-| P6 | Evidence / Result / Link Store |
-| P7 | CLI / Scheduler / Bot 复用 Action |
-| P8/P9 | MCP 与第三方插件治理，后置评估 |
+| P1 | Extension Runtime MVP；包含 ActionSpec/catalog/runtime、内部 DSA core action 复用层、权限/确认/超时/调用深度守卫和任务队列扩展元数据 |
+| P2 | AlphaSift Plugin / Action MVP；包含 manifest、schema、Python/HTTP/CLI adapter、候选归一、高风险 action 回到内部 DSA action |
+| P3 | Plugin API、Skill/Tool bridge、Web 插件中心与机会发现页面 |
+| P4 | CLI / Scheduler / Bot / MCP 复用 Action，补齐持久化 run/result/link Evidence Store 与第三方插件治理评估 |

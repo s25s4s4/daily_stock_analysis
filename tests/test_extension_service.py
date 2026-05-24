@@ -43,7 +43,13 @@ def test_extension_service_enabled_action_view_hides_disabled_plugins_and_intern
     enabled = get_extension_service(_config(extensions_alphasift_enabled=True), refresh=True)
     exposed = enabled.list_actions(enabled_only=True, include_internal=False)
 
-    assert exposed == []
+    assert {action.id for action in exposed} == {
+        "alphasift.healthcheck",
+        "alphasift.list_strategies",
+        "alphasift.screen",
+        "alphasift.analyze_top_picks",
+        "alphasift.import_picks_to_watchlist",
+    }
     assert enabled.plugin_to_dict(enabled.get_plugin("alphasift"))["status"] == "enabled"
 
     reset_extension_service()

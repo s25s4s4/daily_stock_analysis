@@ -53,6 +53,39 @@ class ConfigEnvCompatibilityTestCase(unittest.TestCase):
 
     @patch("src.config.setup_env")
     @patch.object(Config, "_parse_litellm_yaml", return_value=[])
+    def test_load_from_env_reads_alphasift_adapter_config(
+        self, _mock_parse_litellm_yaml, _mock_setup_env
+    ):
+        with patch.dict(
+            os.environ,
+            {
+                "EXTENSIONS_ALPHASIFT_ENABLED": "true",
+                "ALPHASIFT_API_URL": "http://alphasift.local",
+                "ALPHASIFT_CLI_PATH": "/usr/local/bin/alphasift",
+                "EXTENSIONS_ALPHASIFT_CLI_FALLBACK_ENABLED": "true",
+                "ALPHASIFT_SNAPSHOT_SOURCE_PRIORITY": "em_datacenter, efinance",
+                "EXTENSIONS_ALPHASIFT_TIMEOUT_SECONDS": "240",
+                "EXTENSIONS_CLI_STDOUT_MAX_BYTES": "2048",
+                "EXTENSIONS_CLI_STDERR_MAX_BYTES": "1024",
+            },
+            clear=True,
+        ):
+            config = Config._load_from_env()
+
+        self.assertTrue(config.extensions_alphasift_enabled)
+        self.assertEqual(config.alphasift_api_url, "http://alphasift.local")
+        self.assertEqual(config.alphasift_cli_path, "/usr/local/bin/alphasift")
+        self.assertTrue(config.extensions_alphasift_cli_fallback_enabled)
+        self.assertEqual(
+            config.extensions_alphasift_snapshot_source_priority,
+            ["em_datacenter", "efinance"],
+        )
+        self.assertEqual(config.extensions_alphasift_timeout_seconds, 240)
+        self.assertEqual(config.extensions_cli_stdout_max_bytes, 2048)
+        self.assertEqual(config.extensions_cli_stderr_max_bytes, 1024)
+
+    @patch("src.config.setup_env")
+    @patch.object(Config, "_parse_litellm_yaml", return_value=[])
     def test_load_from_env_uses_stable_fundamental_timeout_defaults(
         self, _mock_parse_litellm_yaml, _mock_setup_env
     ):

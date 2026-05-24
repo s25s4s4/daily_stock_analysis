@@ -2,7 +2,7 @@ id: alphasift
 name: AlphaSift
 version: 0.1.0
 kind: builtin
-description: Candidate discovery plugin manifest for the later AlphaSift action phase.
+description: Candidate discovery and strategy screening via local AlphaSift.
 requires:
   - alphasift>=0.1.0
 permissions:
@@ -13,8 +13,20 @@ supported_markets:
   - cn
 installation_hints:
   - python -m pip install -e /path/to/alphasift
-setup_doc_url: docs/extensions.md
+  - 如需 CLI fallback，先核对 alphasift screen --help 后设置 EXTENSIONS_ALPHASIFT_CLI_FALLBACK_ENABLED=true
+setup_doc_url: docs/alphasift-integration.md
 default_enabled: false
-skills: []
-actions: []
+skills:
+  - alphasift_candidate_discovery
+actions:
+  - id: alphasift.healthcheck
+    name: Healthcheck
+  - id: alphasift.list_strategies
+    name: List strategies
+  - id: alphasift.screen
+    name: Screen candidates
+  - id: alphasift.analyze_top_picks
+    name: Analyze top picks
+  - id: alphasift.import_picks_to_watchlist
+    name: Import picks to watchlist
 ui_contributions: []

@@ -775,7 +775,16 @@ class Config:
     debug: bool = False
     extensions_enabled: bool = True  # Enable Extension Runtime framework
     extensions_autoload_builtin: bool = True  # Auto-load built-in extension manifests
-    extensions_alphasift_enabled: bool = False  # Enable built-in AlphaSift manifest only
+    extensions_alphasift_enabled: bool = False  # Enable built-in AlphaSift candidate discovery
+    alphasift_api_url: str = ""  # Optional remote AlphaSift HTTP service
+    alphasift_cli_path: str = "alphasift"  # CLI fallback binary for AlphaSift screen JSON
+    extensions_alphasift_cli_fallback_enabled: bool = False  # Enable AlphaSift CLI screen fallback
+    extensions_alphasift_snapshot_source_priority: List[str] = field(
+        default_factory=lambda: ["em_datacenter", "efinance", "akshare_em"]
+    )
+    extensions_alphasift_timeout_seconds: int = 180
+    extensions_cli_stdout_max_bytes: int = 10 * 1024 * 1024
+    extensions_cli_stderr_max_bytes: int = 1024 * 1024
     max_action_call_depth: int = 3  # Prevent recursive action loops
     http_proxy: Optional[str] = None  # HTTP 代理 (例如: http://127.0.0.1:10809)
     https_proxy: Optional[str] = None # HTTPS 代理
@@ -1537,11 +1546,45 @@ class Config:
             extensions_enabled=parse_env_bool(os.getenv('EXTENSIONS_ENABLED'), default=True),
             extensions_autoload_builtin=parse_env_bool(os.getenv('EXTENSIONS_AUTOLOAD_BUILTIN'), default=True),
             extensions_alphasift_enabled=parse_env_bool(os.getenv('EXTENSIONS_ALPHASIFT_ENABLED'), default=False),
+            alphasift_api_url=(os.getenv('ALPHASIFT_API_URL') or '').strip(),
+            alphasift_cli_path=(os.getenv('ALPHASIFT_CLI_PATH') or 'alphasift').strip() or 'alphasift',
+            extensions_alphasift_cli_fallback_enabled=parse_env_bool(
+                os.getenv('EXTENSIONS_ALPHASIFT_CLI_FALLBACK_ENABLED'),
+                default=False,
+            ),
+            extensions_alphasift_snapshot_source_priority=[
+                source.strip()
+                for source in (
+                    os.getenv(
+                        'ALPHASIFT_SNAPSHOT_SOURCE_PRIORITY',
+                        'em_datacenter,efinance,akshare_em',
+                    )
+                ).split(',')
+                if source.strip()
+            ],
+            extensions_alphasift_timeout_seconds=parse_env_int(
+                os.getenv('EXTENSIONS_ALPHASIFT_TIMEOUT_SECONDS'),
+                180,
+                field_name='EXTENSIONS_ALPHASIFT_TIMEOUT_SECONDS',
+                minimum=30,
+            ),
             max_action_call_depth=parse_env_int(
                 os.getenv('MAX_ACTION_CALL_DEPTH'),
                 3,
                 field_name='MAX_ACTION_CALL_DEPTH',
                 minimum=1,
+            ),
+            extensions_cli_stdout_max_bytes=parse_env_int(
+                os.getenv('EXTENSIONS_CLI_STDOUT_MAX_BYTES'),
+                10 * 1024 * 1024,
+                field_name='EXTENSIONS_CLI_STDOUT_MAX_BYTES',
+                minimum=1024,
+            ),
+            extensions_cli_stderr_max_bytes=parse_env_int(
+                os.getenv('EXTENSIONS_CLI_STDERR_MAX_BYTES'),
+                1024 * 1024,
+                field_name='EXTENSIONS_CLI_STDERR_MAX_BYTES',
+                minimum=1024,
             ),
             config_validate_mode=os.getenv('CONFIG_VALIDATE_MODE', 'warn').lower(),
             http_proxy=os.getenv('HTTP_PROXY'),

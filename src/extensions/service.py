@@ -21,6 +21,13 @@ _CONFIG_SIGNATURE_FIELDS = (
     "extensions_enabled",
     "extensions_autoload_builtin",
     "extensions_alphasift_enabled",
+    "alphasift_api_url",
+    "alphasift_cli_path",
+    "extensions_alphasift_cli_fallback_enabled",
+    "extensions_alphasift_snapshot_source_priority",
+    "extensions_alphasift_timeout_seconds",
+    "extensions_cli_stdout_max_bytes",
+    "extensions_cli_stderr_max_bytes",
     "max_action_call_depth",
 )
 
@@ -54,12 +61,14 @@ class ExtensionService:
         if not getattr(self.config, "extensions_autoload_builtin", True):
             return
         try:
-            from src.extensions.builtin.alphasift import get_alphasift_manifest
+            from src.extensions.builtin.alphasift import build_alphasift_actions, get_alphasift_manifest
 
             manifest = get_alphasift_manifest()
             self.manifests[manifest.id] = manifest
+            for action in build_alphasift_actions(self.config):
+                self.catalog.register(action)
         except Exception as exc:  # pragma: no cover - defensive import guard
-            logger.warning("Failed to load built-in AlphaSift manifest: %s", exc, exc_info=True)
+            logger.warning("Failed to load built-in AlphaSift extension: %s", exc, exc_info=True)
 
     def list_plugins(self) -> List[Dict[str, object]]:
         """Return manifest snapshots for all known plugins."""

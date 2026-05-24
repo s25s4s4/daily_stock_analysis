@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [文档] 新增 AnalysisContextPack P0 上下文盘点，明确字段质量状态、现有状态映射和首版 pack 边界。
 - [修复] 恢复 Agent/历史兼容快照中的关联板块与板块联动字段提取，修复新版首页报告缺少“板块联动”的回归问题。
 - [新功能] 新增 Extension Runtime P1 MVP，支持内置 Action 注册执行、权限/确认/超时/调用深度守卫和扩展任务元数据隔离。
+- [新功能] 新增内置 AlphaSift P2 插件 Action 与 Python/HTTP/CLI adapter，支持候选发现、策略列表、Top Picks 分析提交和自选池导入的运行时闭环。
 
 ## [3.18.0] - 2026-05-21
 

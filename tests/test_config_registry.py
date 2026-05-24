@@ -213,6 +213,39 @@ class TestSettingsHelpMetadata(unittest.TestCase):
         self.assertIn("auth_settings_endpoint_required", field.get("warning_codes", []))
 
 
+class TestExtensionRuntimeFieldsRegistered(unittest.TestCase):
+    """Extension Runtime and AlphaSift adapter config must be visible in settings schema."""
+
+    _EXTENSION_KEYS = (
+        "EXTENSIONS_ENABLED",
+        "EXTENSIONS_AUTOLOAD_BUILTIN",
+        "EXTENSIONS_ALPHASIFT_ENABLED",
+        "ALPHASIFT_API_URL",
+        "ALPHASIFT_CLI_PATH",
+        "EXTENSIONS_ALPHASIFT_CLI_FALLBACK_ENABLED",
+        "ALPHASIFT_SNAPSHOT_SOURCE_PRIORITY",
+        "EXTENSIONS_ALPHASIFT_TIMEOUT_SECONDS",
+        "EXTENSIONS_CLI_STDOUT_MAX_BYTES",
+        "EXTENSIONS_CLI_STDERR_MAX_BYTES",
+        "MAX_ACTION_CALL_DEPTH",
+    )
+
+    def test_field_definitions_exist(self):
+        for key in self._EXTENSION_KEYS:
+            field = get_field_definition(key)
+            self.assertEqual(field["category"], "system", f"{key} category")
+            self.assertFalse(field["is_sensitive"], f"{key} should not be sensitive")
+            self.assertNotEqual(field["display_order"], 9000)
+
+    def test_schema_response_includes_extension_fields(self):
+        schema = build_schema_response()
+        system_cat = next((c for c in schema["categories"] if c["category"] == "system"), None)
+        self.assertIsNotNone(system_cat, "system category missing")
+        field_keys = {f["key"] for f in system_cat["fields"]}
+        for key in self._EXTENSION_KEYS:
+            self.assertIn(key, field_keys, f"{key} missing from schema response")
+
+
 class TestSettingsHelpContract(unittest.TestCase):
     """Help keys must map to registry metadata or be editor-only.
 
