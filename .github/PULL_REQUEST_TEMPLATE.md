@@ -12,6 +12,8 @@ For English contributors: please fill in English. All fields marked (EN) accept 
 - [ ] chore
 - [ ] test
 
+> 文档 / 治理类边界澄清 PR（例如本 issue）请仅勾选 `docs`，不得勾选 `feat` 或 `fix`，并按规则在 Issue Link 中使用 `Refs #<issue_number>`。
+
 ## Background And Problem
 
 请描述当前问题、影响范围与触发场景。  
@@ -36,8 +38,9 @@ For English contributors: please fill in English. All fields marked (EN) accept 
 ## Issue Link
 
 必须填写以下之一 / Fill in one of:
+
+- `Refs #<issue_number>`（文档/治理类 PR 推荐）
 - `Fixes #<issue_number>`
-- `Refs #<issue_number>`
 - 无 Issue 时说明原因与验收标准 / If no issue, explain the motivation and acceptance criteria
 
 > 文档/治理类、仅做边界澄清且不含运行时交付的 PR，请选择 `Refs #<issue_number>`（或不填）并在 PR 类型中勾选 `docs`，避免误触发 Issue 自动关闭；不要使用 `Fixes`/`Closes`（二者都会触发 Issue 自动关闭）用于此类 PR。
