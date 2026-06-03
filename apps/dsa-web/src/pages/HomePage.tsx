@@ -12,6 +12,7 @@ import { DashboardStateBlock } from '../components/dashboard';
 import { StockAutocomplete } from '../components/StockAutocomplete';
 import { StockHistoryTrendDrawer, StockBar } from '../components/history';
 import { ReportMarkdownDrawer } from '../components/report/ReportMarkdownDrawer';
+import { MarketReviewReportView } from '../components/report/MarketReviewReportView';
 import { ReportSummary } from '../components/report/ReportSummary';
 import { TaskPanel } from '../components/tasks';
 import { useDashboardLifecycle, useHomeDashboardState } from '../hooks';
@@ -32,7 +33,6 @@ const HomePage: React.FC = () => {
   const [marketReviewNotice, setMarketReviewNotice] = useState<MarketReviewNotice>(null);
   const [marketReviewError, setMarketReviewError] = useState<ParsedApiError | null>(null);
   const [marketReviewReport, setMarketReviewReport] = useState<string | null>(null);
-  const [marketReviewReportCopied, setMarketReviewReportCopied] = useState(false);
   const [analysisSkills, setAnalysisSkills] = useState<SkillInfo[]>([]);
   const [selectedStrategyId, setSelectedStrategyId] = useState('');
   const [strategyMenuOpen, setStrategyMenuOpen] = useState(false);
@@ -517,22 +517,6 @@ const HomePage: React.FC = () => {
     }
   }, [notify, pollMarketReviewStatus, scrollMarketReviewFeedbackIntoView]);
 
-  const handleCopyMarketReviewReport = useCallback(() => {
-    if (!marketReviewReport) {
-      return;
-    }
-
-    void navigator.clipboard.writeText(marketReviewReport).then(
-      () => {
-        setMarketReviewReportCopied(true);
-        setTimeout(() => setMarketReviewReportCopied(false), 2000);
-      },
-      (err) => {
-        console.error('复制失败:', err);
-      },
-    );
-  }, [marketReviewReport]);
-
   const sidebarContent = useMemo(
     () => (
       <div className="flex min-h-0 h-full flex-col gap-3 overflow-hidden">
@@ -778,25 +762,11 @@ const HomePage: React.FC = () => {
             ) : null}
 
             {marketReviewReport ? (
-              <div className="mb-3 rounded-xl border border-subtle bg-surface/70 px-3 py-3 text-xs text-secondary-text shadow-sm">
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <p className="font-semibold text-foreground">大盘复盘报告</p>
-                  <button
-                    type="button"
-                    className="home-surface-button h-7 rounded-md px-3 py-1 text-xs text-foreground"
-                    disabled={marketReviewReportCopied}
-                    onClick={() => void handleCopyMarketReviewReport()}
-                  >
-                    {marketReviewReportCopied ? '已复制' : '复制'}
-                  </button>
-                </div>
-                <pre
-                  data-testid="market-review-report"
-                  className="overflow-x-auto whitespace-pre-wrap break-words rounded-lg bg-background px-3 py-2 leading-relaxed"
-                >
-                  {marketReviewReport}
-                </pre>
-              </div>
+              <MarketReviewReportView
+                content={marketReviewReport}
+                reportLanguage="zh"
+                className="mb-3"
+              />
             ) : null}
 
             {error ? (
@@ -812,6 +782,7 @@ const HomePage: React.FC = () => {
               </div>
             ) : selectedReport ? (
               <div className={isHistoryTrendOpen ? 'max-w-6xl space-y-4 pb-8' : 'max-w-4xl space-y-4 pb-8'}>
+                {!isMarketReviewHistoryReport ? (
                 <div className="flex flex-wrap items-center justify-end gap-2">
                   <Button
                     variant="home-action-ai"
@@ -863,6 +834,7 @@ const HomePage: React.FC = () => {
                     {reportText.fullReport}
                   </Button>
                 </div>
+                ) : null}
                 {isHistoryTrendOpen ? (
                   <StockHistoryTrendDrawer
                     key={`stock-history-${selectedReport.meta.id}`}

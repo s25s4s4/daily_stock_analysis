@@ -354,7 +354,17 @@ describe('HomePage', () => {
     vi.mocked(analysisApi.getStatus).mockResolvedValue({
       taskId: 'task-1',
       status: 'completed',
-      marketReviewReport: Array.from({ length: 30 }, (_, index) => `第 ${index + 1} 行复盘内容`).join('\n'),
+      marketReviewReport: [
+        '# A股市场复盘',
+        '',
+        '> 市场情绪修复',
+        '',
+        '| 指数 | 表现 |',
+        '| --- | --- |',
+        '| 上证指数 | 震荡走强 |',
+        '',
+        '- 资金回流核心资产',
+      ].join('\n'),
     });
 
     render(
@@ -370,6 +380,10 @@ describe('HomePage', () => {
     expect(dashboardScroll).toContainElement(marketReviewReport);
     expect(marketReviewReport.className).not.toContain('max-h-64');
     expect(marketReviewReport.className).not.toContain('overflow-y-auto');
+    expect(screen.getByRole('heading', { name: 'A股市场复盘' })).toBeInTheDocument();
+    expect(screen.getByText('市场情绪修复')).toBeInTheDocument();
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.queryByText('# A股市场复盘')).not.toBeInTheDocument();
     expect(await screen.findByText('开始分析')).toBeInTheDocument();
   });
 
@@ -701,7 +715,7 @@ describe('HomePage', () => {
     expect(trigger).toHaveFocus();
   });
 
-  it('disables stock reanalysis and follow-up for market review history reports', async () => {
+  it('renders market review history reports with a dedicated markdown view', async () => {
     vi.mocked(historyApi.getList).mockResolvedValue({
       total: 1,
       page: 1,
@@ -709,6 +723,15 @@ describe('HomePage', () => {
       items: [marketReviewHistoryItem],
     });
     vi.mocked(historyApi.getDetail).mockResolvedValue(marketReviewHistoryReport);
+    vi.mocked(historyApi.getMarkdown).mockResolvedValue([
+      '# 大盘复盘详情',
+      '',
+      '**赚钱效应** 改善',
+      '',
+      '| 方向 | 状态 |',
+      '| --- | --- |',
+      '| 半导体 | 轮动增强 |',
+    ].join('\n'));
 
     render(
       <MemoryRouter>
@@ -717,14 +740,13 @@ describe('HomePage', () => {
     );
 
     await screen.findByText('大盘复盘摘要');
-    const reanalyzeButton = screen.getByRole('button', { name: '重新分析' });
-    const followUpButton = screen.getByRole('button', { name: '追问 AI' });
-
-    expect(reanalyzeButton).toBeDisabled();
-    expect(followUpButton).toBeDisabled();
-
-    fireEvent.click(reanalyzeButton);
-    fireEvent.click(followUpButton);
+    expect(await screen.findByRole('heading', { name: '大盘复盘详情' })).toBeInTheDocument();
+    expect(screen.getByText('赚钱效应')).toBeInTheDocument();
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '重新分析' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '追问 AI' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '历史趋势' })).not.toBeInTheDocument();
+    expect(historyApi.getMarkdown).toHaveBeenCalledWith(marketReviewHistoryReport.meta.id);
 
     expect(analysisApi.analyzeAsync).not.toHaveBeenCalled();
     expect(navigateMock).not.toHaveBeenCalled();
