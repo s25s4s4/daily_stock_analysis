@@ -38,6 +38,7 @@ function getStoredUiLanguage(storage?: Storage | null): UiLanguage | null {
   }
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- helper is exported for persistence tests
 export function getUiLanguageStorage(): Storage | null {
   if (typeof window === 'undefined') {
     return null;
@@ -50,6 +51,7 @@ export function getUiLanguageStorage(): Storage | null {
   }
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- helper is exported for persistence tests
 export function persistUiLanguage(storage: Storage | null, language: UiLanguage): void {
   if (!storage) {
     return;
