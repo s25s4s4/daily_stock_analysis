@@ -18,8 +18,8 @@ interface StockBarProps {
 }
 
 /**
- * 个股栏组件：以股票维度展示历史分析记录，每只股票只显示一条，
- * 大盘复盘置顶，其余按最新分析时间排列。支持全选、批量删除。
+ * 个股栏组件：以股票维度展示历史分析记录，每只股票只显示一条。
+ * 大盘复盘可作为 MARKET 项参与展示，并按最近分析时间排序。
  */
 export const StockBar: React.FC<StockBarProps> = ({
   items,
