@@ -607,6 +607,40 @@ class AlphaSiftOpportunitiesApiTestCase(unittest.TestCase):
         self.assertEqual(payload["route"][0]["source"], "新闻")
         provider.hotspot_detail.assert_not_called()
 
+    def test_hotspot_detail_falls_back_to_provider_when_contract_helper_fails(self) -> None:
+        config = self._config(enabled=True)
+        provider = alphasift_service.DsaEastMoneyHotspotProvider()
+        provider.hotspot_detail = MagicMock(return_value={
+            "topic": "机器人执行器",
+            "summary": "机器人执行器 盘中发酵。",
+            "route": [{"title": "盘中发酵", "description": "provider fallback route.", "source": "eastmoney_board_change"}],
+            "stocks": [{"code": "002000", "name": "旧路径个股"}],
+            "stock_count": 1,
+            "source_errors": [],
+        })
+
+        def get_hotspot_detail(topic: str, **_kwargs: Any) -> Dict[str, Any]:
+            raise RuntimeError("contract parser broken")
+
+        with (
+            patch("src.services.alphasift_service._get_alphasift_status_snapshot", return_value=({}, True, {})),
+            patch("src.services.alphasift_service._resolve_hotspot_provider", return_value=("akshare", provider)),
+            patch(
+                "src.services.alphasift_service._import_alphasift_hotspot",
+                return_value=SimpleNamespace(get_hotspot_detail=get_hotspot_detail),
+            ),
+        ):
+            payload = self._hotspot_detail(config=config, provider="akshare", topic="机器人执行器")
+
+        self.assertEqual(payload["route"][0]["title"], "盘中发酵")
+        self.assertEqual(payload["route"][0]["source"], "eastmoney_board_change")
+        provider.hotspot_detail.assert_called_once_with("机器人执行器")
+        self.assertEqual(
+            payload["source_errors"][0],
+            "alphasift_hotspot_detail_fallback: contract parser broken",
+        )
+        self.assertTrue(payload["fallback_used"])
+
     def test_hotspot_detail_preserves_provider_route_when_contract_detail_has_no_timeline(self) -> None:
         config = self._config(enabled=True)
         provider = alphasift_service.DsaEastMoneyHotspotProvider()

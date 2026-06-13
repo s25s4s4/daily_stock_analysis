@@ -327,6 +327,8 @@ class AlphaSiftService:
         provider_name, provider_arg = _resolve_hotspot_provider(provider)
         if not isinstance(provider_arg, DsaEastMoneyHotspotProvider):
             provider_arg = DsaEastMoneyHotspotProvider()
+        normalized: Dict[str, Any] = {}
+        hotspot_helper_error: str = ""
         try:
             try:
                 hotspot_module = _import_alphasift_hotspot()
@@ -335,30 +337,46 @@ class AlphaSiftService:
                 get_hotspot_detail = None
             with _alphasift_runtime_env(self.config):
                 if callable(get_hotspot_detail) and type(provider_arg) is DsaEastMoneyHotspotProvider:
-                    detail = get_hotspot_detail(
-                        topic_text,
-                        provider=provider_arg,
-                        top_stocks=30,
-                        history_path=_alphasift_hotspot_history_path(),
-                        fallback_cache_path=_alphasift_hotspot_cache_path(),
-                    )
-                    normalized = _normalize_alphasift_hotspot_detail(
-                        detail,
-                        provider=provider_name,
-                        requested_topic=topic_text,
-                    )
-                    normalized = _merge_provider_hotspot_route_fallback(
-                        normalized,
-                        provider=provider_arg,
-                        topic=topic_text,
-                    )
+                    try:
+                        detail = get_hotspot_detail(
+                            topic_text,
+                            provider=provider_arg,
+                            top_stocks=30,
+                            history_path=_alphasift_hotspot_history_path(),
+                            fallback_cache_path=_alphasift_hotspot_cache_path(),
+                        )
+                        normalized = _normalize_alphasift_hotspot_detail(
+                            detail,
+                            provider=provider_name,
+                            requested_topic=topic_text,
+                        )
+                        normalized = _merge_provider_hotspot_route_fallback(
+                            normalized,
+                            provider=provider_arg,
+                            topic=topic_text,
+                        )
+                    except Exception as exc:
+                        hotspot_helper_error = f"{exc}"
+                        logger.warning(
+                            "AlphaSift contract hotspot detail fallback to provider for topic=%s: %s",
+                            topic_text,
+                            hotspot_helper_error,
+                        )
                 else:
+                    normalized = provider_arg.hotspot_detail(topic_text)
+                if not normalized:
                     normalized = provider_arg.hotspot_detail(topic_text)
         except Exception as exc:
             raise HTTPException(
                 status_code=424,
                 detail={"error": "alphasift_hotspot_detail_failed", "message": f"AlphaSift hotspot detail failed: {exc}"},
             ) from exc
+        if hotspot_helper_error:
+            source_errors = _list_text_values(normalized.get("source_errors"))
+            source_errors.append(f"alphasift_hotspot_detail_fallback: {hotspot_helper_error}")
+            normalized["source_errors"] = source_errors
+            normalized["fallback_used"] = True
+            normalized["provider"] = provider_name
         normalized["enabled"] = True
         normalized["provider"] = provider_name
         return _remove_non_finite_json_values(normalized)
