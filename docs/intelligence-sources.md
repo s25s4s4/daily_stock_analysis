@@ -53,3 +53,9 @@ NEWS_INTEL_MAX_ITEMS_PER_SOURCE=50
 - 本次能力仅新增本地资讯消费路径，不改模型名、provider/base URL、回退策略或运行时配置语义；兼容现有部署配置，回滚方式为清退本地资讯接入入口或移除本地资讯源配置/数据。
 
 后续 PR 可以继续完善报告 evidence 展示和 Web 设置/报告查看入口。
+
+## 兼容性与回滚说明（Issue #1707）
+
+- 本功能不改动第三方模型/API Provider 语义，不新增 provider/model/base URL/运行时路由或配置迁移分支。
+- 结构化检测提示中的模型/API 兼容风险在本次改动中不成立：`news_context` 注入链路仅复用现有 LLM 分析输入构造流程（`src/core/pipeline.py`、`src/market_analyzer.py`、`src/analyzer.py`），且无新增 `.env` 写入、清理、回填逻辑。
+- 回滚方式：`revert` 本 PR；如需降级配置，仅需停用并移除本地资讯源配置（含 `sources` 表与 `intelligence_items` 存量）即可，不影响原有模型、provider 或其它历史分析链路。
