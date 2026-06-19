@@ -1120,6 +1120,52 @@ class AnalysisHistoryTestCase(unittest.TestCase):
         self.assertEqual(report.details.belong_boards, [{"name": "白酒", "type": "行业"}])
         self.assertEqual(report.details.sector_rankings["top"][0]["name"], "白酒")
 
+    def test_history_detail_uses_raw_code_for_legacy_jp_kr_fundamental_snapshot(self) -> None:
+        """Legacy bare JP/KR history rows should display suffixes but read snapshots by stored code."""
+        if get_history_detail is None:
+            self.skipTest("fastapi is not installed in this test environment")
+
+        result = self._build_result()
+        result.code = "005930"
+        result.name = "Samsung Electronics"
+        query_id = "query_kr_raw_fundamental_fallback"
+        saved = self.db.save_analysis_history(
+            result=result,
+            query_id=query_id,
+            report_type="simple",
+            news_content="news",
+            context_snapshot=None,
+            save_snapshot=False,
+        )
+        self.assertGreater(saved, 0)
+
+        self.db.save_fundamental_snapshot(
+            query_id=query_id,
+            code="005930",
+            payload={
+                "earnings": {
+                    "data": {
+                        "financial_report": {"report_date": "2025-12-31", "revenue": 1000},
+                        "dividend": {"ttm_dividend_yield_pct": 2.6},
+                    }
+                }
+            },
+        )
+
+        with self.db.get_session() as session:
+            row = session.query(AnalysisHistory).filter(AnalysisHistory.query_id == query_id).first()
+            if row is None:
+                self.fail("未找到保存的历史记录")
+            self.assertEqual(row.id, saved)
+            record_id = row.id
+
+        with patch("src.services.history_service.resolve_index_stock_code", return_value="005930.KS"):
+            report = get_history_detail(str(record_id), db_manager=self.db)
+
+        self.assertEqual(report.meta.stock_code, "005930.KS")
+        self.assertEqual(report.details.financial_report["report_date"], "2025-12-31")
+        self.assertEqual(report.details.dividend_metrics["ttm_dividend_yield_pct"], 2.6)
+
     def test_history_detail_preserves_unavailable_board_rankings_state(self) -> None:
         """Failed board ranking blocks should remain unavailable in detail response."""
         if get_history_detail is None:

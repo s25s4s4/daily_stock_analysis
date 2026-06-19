@@ -459,7 +459,7 @@ def get_history_detail(
         
         fallback_fundamental = db_manager.get_latest_fundamental_snapshot(
             query_id=result.get("query_id", ""),
-            code=result.get("stock_code", ""),
+            code=result.get("storage_stock_code") or result.get("stock_code", ""),
         )
         extracted_fundamental = extract_fundamental_detail_fields(
             context_snapshot=result.get("context_snapshot"),

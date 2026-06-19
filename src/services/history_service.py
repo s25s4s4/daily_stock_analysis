@@ -567,6 +567,7 @@ class HistoryService:
             "id": record.id,
             "query_id": record.query_id,
             "stock_code": display_code,
+            "storage_stock_code": str(record.code or "").strip(),
             "stock_name": record.name,
             "report_type": record.report_type,
             "created_at": record.created_at.isoformat() if record.created_at else None,
