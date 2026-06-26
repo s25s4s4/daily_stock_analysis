@@ -192,7 +192,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [screener, ai-selector]
     if: github.event.inputs.mode == '' || github.event.inputs.mode == 'full' || github.event.inputs.mode == 'analysis-only'
-    timeout-minutes: ${{ fromJSON(vars.ANALYSIS_TIMEOUT_MINUTES || '60') }}
+    timeout-minutes: 0
     environment: STOCK_LIST
     
     steps:
