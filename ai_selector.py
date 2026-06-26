@@ -52,6 +52,11 @@ def analyze_with_ai(stocks):
     # 准备股票数据摘要
     stock_summary = []
     for i, stock in enumerate(stocks[:50]):  # 限制前50只进行AI分析，避免token过多
+        ma5 = stock.get('ma5', 0)
+        ma10 = stock.get('ma10', 0)
+        ma20 = stock.get('ma20', 0)
+        bias_rate = stock.get('bias_rate', 0)
+        
         summary = f"""
 股票{i+1}: {stock['name']}({stock['code']})
 - 价格: {stock['price']:.2f}元
@@ -59,10 +64,12 @@ def analyze_with_ai(stocks):
 - 量比: {stock['volume_ratio']:.2f}
 - 换手率: {stock['turnover_rate']:.2f}%
 - 市值: {stock['market_cap']:.2f}亿
-- MA5: {stock['ma5']:.2f}, MA10: {stock['ma10']:.2f}, MA20: {stock['ma20']:.2f}
-- 乖离率: {stock['bias_rate']:.2f}%
-- 综合得分: {stock['score']:.2f}
 """
+        if ma5 > 0:
+            summary += f"- MA5: {ma5:.2f}, MA10: {ma10:.2f}, MA20: {ma20:.2f}\n"
+            summary += f"- 乖离率: {bias_rate:.2f}%\n"
+        
+        summary += f"- 综合得分: {stock['score']:.2f}\n"
         stock_summary.append(summary)
     
     # 构建AI提示词
