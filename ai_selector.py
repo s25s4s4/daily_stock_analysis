@@ -110,13 +110,30 @@ def analyze_with_ai(stocks):
 """
     
     try:
-        # 调用AI模型
-        response = completion(
-            model=os.getenv("LITELLM_MODEL", "gpt-3.5-turbo"),
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.7,
-            max_tokens=2000
-        )
+        # 调用AI模型 - 支持多种配置方式
+        model = os.getenv("LITELLM_MODEL", os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"))
+        api_key = os.getenv("LITELLM_API_KEY") or os.getenv("OPENAI_API_KEY")
+        api_base = os.getenv("LITELLM_API_BASE") or os.getenv("OPENAI_BASE_URL") or os.getenv("OPENAI_BASE_URL")
+        
+        # 构建调用参数
+        call_params = {
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.7,
+            "max_tokens": 2000
+        }
+        
+        # 添加可选参数
+        if api_key:
+            call_params["api_key"] = api_key
+        if api_base:
+            call_params["api_base"] = api_base
+        
+        print(f"🤖 使用模型: {model}")
+        if api_base:
+            print(f"   API地址: {api_base}")
+        
+        response = completion(**call_params)
         
         # 解析AI返回的JSON
         content = response.choices[0].message.content

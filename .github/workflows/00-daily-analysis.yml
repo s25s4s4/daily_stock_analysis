@@ -1,7 +1,7 @@
 name: 每日股票分析（两阶段选股）
 
 on:
-  # 定时触发 - 每天北京时间 15:30 (UTC 07:30) 收盘后先选股，18:00再分析
+  # 定时触发 - 每周一、三北京时间 12:00 (UTC 04:00)
   schedule:
     - cron: '0 4 * * 1,3'     # 周一和周三，UTC 04:00 = 北京时间 12:00
   
@@ -55,7 +55,7 @@ jobs:
       - name: 安装依赖
         run: |
           pip install --upgrade pip
-          pip install akshare pandas numpy
+          pip install akshare pandas numpy efinance
       
       - name: 创建数据目录
         run: mkdir -p data logs reports
@@ -192,7 +192,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [screener, ai-selector]
     if: github.event.inputs.mode == '' || github.event.inputs.mode == 'full' || github.event.inputs.mode == 'analysis-only'
-    timeout-minutes: 0
+    timeout-minutes: 60
     environment: STOCK_LIST
     
     steps:
