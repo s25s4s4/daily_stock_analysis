@@ -148,30 +148,34 @@ def rule_based_selection(stocks):
         score = 0
         
         # 1. 综合得分（权重30%）
-        score += stock['score'] * 0.3
+        score += stock.get('score', 0) * 0.3
         
         # 2. 量比评分（权重20%）- 量比1.5-3最佳
-        if 1.5 <= stock['volume_ratio'] <= 3:
+        vr = stock.get('volume_ratio', 1)
+        if 1.5 <= vr <= 3:
             score += 20
-        elif 1.2 <= stock['volume_ratio'] < 1.5 or 3 < stock['volume_ratio'] <= 5:
+        elif 1.2 <= vr < 1.5 or 3 < vr <= 5:
             score += 10
         
         # 3. 换手率评分（权重20%）- 换手率3-8%最佳
-        if 3 <= stock['turnover_rate'] <= 8:
+        tr = stock.get('turnover_rate', 5)
+        if 3 <= tr <= 8:
             score += 20
-        elif 2 <= stock['turnover_rate'] < 3 or 8 < stock['turnover_rate'] <= 12:
+        elif 2 <= tr < 3 or 8 < tr <= 12:
             score += 10
         
         # 4. 乖离率评分（权重15%）- 乖离率-3%到3%最佳
-        if -3 <= stock['bias_rate'] <= 3:
+        br = stock.get('bias_rate', 0)
+        if -3 <= br <= 3:
             score += 15
-        elif -5 <= stock['bias_rate'] < -3 or 3 < stock['bias_rate'] <= 5:
+        elif -5 <= br < -3 or 3 < br <= 5:
             score += 8
         
         # 5. 涨跌幅评分（权重15%）- 涨跌幅-2%到5%最佳
-        if -2 <= stock['change_pct'] <= 5:
+        cp = stock.get('change_pct', 0)
+        if -2 <= cp <= 5:
             score += 15
-        elif -5 <= stock['change_pct'] < -2 or 5 < stock['change_pct'] <= 8:
+        elif -5 <= cp < -2 or 5 < cp <= 8:
             score += 8
         
         scored_stocks.append({
