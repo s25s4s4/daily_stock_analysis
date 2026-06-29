@@ -16,6 +16,61 @@ import sys
 import time
 from pathlib import Path
 
+def calculate_ma_for_stocks(df, top_n=200):
+    """为筛选出的股票计算MA5/MA10/MA20和乖离率"""
+    import akshare as ak
+    
+    print(f"\n📈 计算均线指标（前{top_n}只）...")
+    
+    # 只计算排名前top_n的股票
+    candidates = df.head(top_n).copy()
+    calculated = []
+    
+    for idx, (_, row) in enumerate(candidates.iterrows()):
+        code = str(row.get("代码", ""))
+        if not code:
+            continue
+        
+        try:
+            # 获取最近30天K线数据计算均线
+            hist = ak.stock_zh_a_hist(symbol=code, period="daily", adjust="qfq")
+            if hist is None or len(hist) < 20:
+                continue
+            
+            # 取最近20个交易日
+            hist = hist.tail(20)
+            closes = hist["收盘"].astype(float).values
+            
+            ma5 = float(np.mean(closes[-5:])) if len(closes) >= 5 else 0
+            ma10 = float(np.mean(closes[-10:])) if len(closes) >= 10 else 0
+            ma20 = float(np.mean(closes[-20:])) if len(closes) >= 20 else 0
+            
+            # 乖离率 = (当前价 - MA20) / MA20 * 100
+            current_price = float(row.get("最新价", 0) or 0)
+            bias_rate = ((current_price - ma20) / ma20 * 100) if ma20 > 0 else 0
+            
+            candidates.loc[candidates.index[idx], "ma5"] = round(ma5, 2)
+            candidates.loc[candidates.index[idx], "ma10"] = round(ma10, 2)
+            candidates.loc[candidates.index[idx], "ma20"] = round(ma20, 2)
+            candidates.loc[candidates.index[idx], "bias_rate"] = round(bias_rate, 2)
+            
+            calculated.append(code)
+            
+            # 每20只打印进度
+            if (idx + 1) % 20 == 0:
+                print(f"  进度: {idx + 1}/{top_n}")
+            
+            # 小延迟避免请求过快
+            time.sleep(0.3)
+            
+        except Exception as e:
+            if idx < 5:  # 只打印前几个错误
+                print(f"  ⚠️ {code} 均线计算失败: {e}")
+            continue
+    
+    print(f"  ✅ 均线计算完成: {len(calculated)}/{top_n} 只")
+    return candidates
+
 # 筛选条件配置
 SCREENER_CONFIG = {
     # 基础过滤
@@ -269,7 +324,10 @@ def main():
     # 6. 取前200只
     result = df.head(SCREENER_CONFIG["target_count"])
     
-    # 7. 保存结果
+    # 7. 计算均线指标（MA5/MA10/MA20/乖离率）
+    result = calculate_ma_for_stocks(result, top_n=SCREENER_CONFIG["target_count"])
+    
+    # 8. 保存结果
     output_file = Path("data/screener_result.json")
     output_file.parent.mkdir(parents=True, exist_ok=True)
     
@@ -285,6 +343,10 @@ def main():
             "turnover_rate": float(row.get("换手率", 0) or 0),
             "market_cap": float(row.get("总市值(亿)", 0) or 0),
             "score": float(row.get("综合得分", 0) or 0),
+            "ma5": float(row.get("ma5", 0) or 0),
+            "ma10": float(row.get("ma10", 0) or 0),
+            "ma20": float(row.get("ma20", 0) or 0),
+            "bias_rate": float(row.get("bias_rate", 0) or 0),
         }
         stock_list.append(stock_data)
     

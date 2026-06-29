@@ -138,11 +138,13 @@ jobs:
       - name: 执行第二阶段AI精选
         env:
           LITELLM_API_KEY: ${{ secrets.LITELLM_API_KEY }}
-          LITELLM_MODEL: ${{ vars.LITELLM_MODEL || secrets.LITELLM_MODEL || 'gemini-3-flash-preview' }}
+          LITELLM_MODEL: ${{ vars.LITELLM_MODEL || secrets.LITELLM_MODEL || 'openai/gpt-4o-mini' }}
+          LITELLM_API_BASE: ${{ vars.LITELLM_API_BASE || secrets.LITELLM_API_BASE }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || secrets.GEMINI_MODEL || 'gemini-3-flash-preview' }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || secrets.GEMINI_MODEL || 'gemini-2.0-flash-exp' }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_BASE_URL: ${{ vars.OPENAI_BASE_URL || secrets.OPENAI_BASE_URL }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL || secrets.OPENAI_MODEL || 'gpt-4o-mini' }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           AIHUBMIX_KEY: ${{ secrets.AIHUBMIX_KEY }}
         run: |
@@ -193,7 +195,6 @@ jobs:
     needs: [screener, ai-selector]
     if: github.event.inputs.mode == '' || github.event.inputs.mode == 'full' || github.event.inputs.mode == 'analysis-only'
     timeout-minutes: 60
-    environment: STOCK_LIST
     
     steps:
       - name: 随机延迟
@@ -242,7 +243,8 @@ jobs:
           LITELLM_CONFIG: ${{ vars.LITELLM_CONFIG || secrets.LITELLM_CONFIG }}
           LITELLM_CONFIG_YAML: ${{ vars.LITELLM_CONFIG_YAML || secrets.LITELLM_CONFIG_YAML }}
           LITELLM_API_KEY: ${{ secrets.LITELLM_API_KEY }}
-          LITELLM_MODEL: ${{ vars.LITELLM_MODEL || secrets.LITELLM_MODEL }}
+          LITELLM_MODEL: ${{ vars.LITELLM_MODEL || secrets.LITELLM_MODEL || 'openai/gpt-4o-mini' }}
+          LITELLM_API_BASE: ${{ vars.LITELLM_API_BASE || secrets.LITELLM_API_BASE }}
           LITELLM_FALLBACK_MODELS: ${{ vars.LITELLM_FALLBACK_MODELS || secrets.LITELLM_FALLBACK_MODELS }}
           AGENT_LITELLM_MODEL: ${{ vars.AGENT_LITELLM_MODEL || secrets.AGENT_LITELLM_MODEL }}
           VISION_MODEL: ${{ vars.VISION_MODEL || secrets.VISION_MODEL }}
@@ -483,11 +485,13 @@ jobs:
             AI_STOCKS=$(cat data/ai_selected_codes.txt)
             export STOCK_LIST="$AI_STOCKS"
             echo "🤖 使用AI精选股票: $STOCK_LIST"
+            echo "STOCK_LIST=$AI_STOCKS" >> $GITHUB_ENV
           elif [ -f "data/screener_codes.txt" ]; then
             # 备用：使用第一阶段筛选的前20只
             SCREENER_STOCKS=$(head -c 500 data/screener_codes.txt)
             export STOCK_LIST="$SCREENER_STOCKS"
             echo "📊 使用筛选股票（前20只）: $STOCK_LIST"
+            echo "STOCK_LIST=$SCREENER_STOCKS" >> $GITHUB_ENV
           else
             # 最后备用：使用配置的STOCK_LIST
             if [ -n "${STOCK_LIST_CONFIG:-}" ]; then
@@ -496,6 +500,7 @@ jobs:
               export STOCK_LIST="600519"
             fi
             echo "⚪ 使用默认配置: $STOCK_LIST"
+            echo "STOCK_LIST=$STOCK_LIST" >> $GITHUB_ENV
           fi
 
           # 处理 LITELLM YAML 配置文件

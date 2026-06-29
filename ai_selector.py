@@ -113,7 +113,12 @@ def analyze_with_ai(stocks):
         # 调用AI模型 - 支持多种配置方式
         model = os.getenv("LITELLM_MODEL", os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"))
         api_key = os.getenv("LITELLM_API_KEY") or os.getenv("OPENAI_API_KEY")
-        api_base = os.getenv("LITELLM_API_BASE") or os.getenv("OPENAI_BASE_URL") or os.getenv("OPENAI_BASE_URL")
+        api_base = os.getenv("LITELLM_API_BASE") or os.getenv("OPENAI_BASE_URL")
+        
+        # 确保model有provider前缀（litellm需要）
+        if "/" not in model and api_base:
+            # 如果model没有provider前缀但有api_base，推断为openai兼容
+            model = f"openai/{model}"
         
         # 构建调用参数
         call_params = {
